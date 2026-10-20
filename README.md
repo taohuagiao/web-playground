@@ -1,5 +1,7 @@
 # WEB PLAYGROUND — 浏览器炫技实验室
 
+仓库：<https://github.com/taohuagiao/web-playground>
+
 一个零依赖的单页交互实验场，用原生 **HTML / CSS / JavaScript** 手搓。没有框架、没有构建步骤、没有图片素材。
 
 打开 `index.html` 就能玩，也可以直接扔到 GitHub Pages。
