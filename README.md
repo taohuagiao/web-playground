@@ -1,6 +1,7 @@
 # WEB PLAYGROUND — 浏览器炫技实验室
 
 仓库：<https://github.com/taohuagiao/web-playground>
+在线预览：<https://taohuagiao.github.io/web-playground/>
 
 一个零依赖的单页交互实验场，用原生 **HTML / CSS / JavaScript** 手搓。没有框架、没有构建步骤、没有图片素材。
 
@@ -39,6 +40,10 @@ npx serve .
 然后打开 <http://localhost:8080>。
 
 ## 部署到 GitHub Pages
+
+当前仓库已经开启 Pages，在线地址：<https://taohuagiao.github.io/web-playground/>
+
+如果要从头配置：
 
 1. 把整个 `web-showcase` 目录推到仓库（可以放在仓库根目录，也可以放在 `docs/`）。
 2. 在 GitHub 仓库的 **Settings → Pages** 里：
