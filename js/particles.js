@@ -1,7 +1,8 @@
 /* =========================================================
    WEB PLAYGROUND — particles.js
    Text is sampled into thousands of glowing particles.
-   They flee from the cursor, explode on click, and reform.
+   They flee from the cursor, explode on click, and reform
+   into whatever you type.
    ========================================================= */
 
 (function () {
@@ -14,8 +15,9 @@
   var ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  var words = ['MAGIC', 'PLAY', 'WEB', 'WOW'];
+  var words = ['PLAY', 'MAGIC', 'WEB', 'WOW'];
   var wordIndex = 0;
+  var customWord = '';
   var particles = [];
   var dpr = 1;
   var W = 0;
@@ -26,7 +28,11 @@
   var nextTimer = 0;
   var resizeTimer = 0;
   var lastTime = 0;
-  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var maxParticles = 7200;
+
+  function motion() {
+    return window.PGMotion || { ambient: true, scale: 1 };
+  }
 
   function currentPalette() {
     if (window.PG && window.PG.palettes) {
@@ -63,31 +69,49 @@
     sprites.b = makeSprite(p.c3);
   }
 
+  function activeWord() {
+    return customWord || words[wordIndex];
+  }
+
   function buildTargets(word) {
-    if (W < 2 || H < 2) return [];
+    if (W < 2 || H < 2 || !word) return [];
 
     var off = document.createElement('canvas');
     off.width = W;
     off.height = H;
     var octx = off.getContext('2d');
+    var family = '"Space Grotesk", "Noto Sans SC", "Arial Black", "Microsoft YaHei", sans-serif';
 
     var fontSize = Math.min(H * 0.70, W * 0.26);
-    octx.font = '700 ' + fontSize + 'px "Space Grotesk", "Arial Black", "Segoe UI", sans-serif';
+
+    octx.font = '700 ' + fontSize + 'px ' + family;
+    var measured = octx.measureText(word).width;
+    var maxWidth = W * 0.92;
+    if (measured > maxWidth) {
+      fontSize *= maxWidth / measured;
+    }
+
+    octx.font = '700 ' + fontSize + 'px ' + family;
     octx.textAlign = 'center';
     octx.textBaseline = 'middle';
     octx.fillStyle = '#ffffff';
     octx.fillText(word, W / 2, H * 0.52);
 
     var data = octx.getImageData(0, 0, W, H).data;
-    var step = Math.max(2, Math.round(fontSize / 100));
+    var step = Math.max(2, Math.round(fontSize / 110));
     var targets = [];
 
-    for (var y = 0; y < H; y += step) {
-      for (var x = 0; x < W; x += step) {
-        if (data[(y * W + x) * 4 + 3] > 128) {
-          targets.push({ x: x, y: y });
+    for (var attempt = 0; attempt < 4; attempt++) {
+      targets = [];
+      for (var y = 0; y < H; y += step) {
+        for (var x = 0; x < W; x += step) {
+          if (data[(y * W + x) * 4 + 3] > 128) {
+            targets.push({ x: x, y: y });
+          }
         }
       }
+      if (targets.length <= maxParticles) break;
+      step += 1;
     }
 
     return targets;
@@ -122,6 +146,10 @@
     }
   }
 
+  function render() {
+    applyTargets(buildTargets(activeWord()));
+  }
+
   function resize() {
     var rect = art.getBoundingClientRect();
     dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -136,14 +164,15 @@
     canvas.height = H;
 
     refreshSprites();
-    applyTargets(buildTargets(words[wordIndex]));
+    render();
   }
 
   function scheduleNext(delay) {
     clearTimeout(nextTimer);
     nextTimer = setTimeout(function () {
+      if (customWord) return;
       wordIndex = (wordIndex + 1) % words.length;
-      applyTargets(buildTargets(words[wordIndex]));
+      render();
     }, delay);
   }
 
@@ -166,6 +195,7 @@
     var radius = 115 * dpr;
     var radius2 = radius * radius;
     var damp = Math.pow(0.90, dt);
+    var ambientScale = motion().scale;
 
     for (var i = 0; i < particles.length; i++) {
       var p = particles[i];
@@ -187,8 +217,8 @@
 
       p.vx *= damp;
       p.vy *= damp;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
+      p.x += p.vx * dt * ambientScale;
+      p.y += p.vy * dt * ambientScale;
 
       var sprite = p.tint < 0.70 ? sprites.a : sprites.b;
       if (!sprite) continue;
@@ -216,12 +246,56 @@
     resize();
     requestAnimationFrame(tick);
 
-    if (!reduceMotion) {
-      setInterval(function () {
-        if (!document.hidden && running) scheduleNext(0);
-      }, 9000);
-    }
+    setInterval(function () {
+      if (document.hidden || !running) return;
+      if (!motion().ambient || customWord) return;
+      scheduleNext(0);
+    }, 9000);
   }
+
+  /* ---------------- typing ---------------- */
+
+  var form = document.getElementById('hero-form');
+  var input = document.getElementById('hero-input');
+  var inputTimer = 0;
+
+  function setWord(text) {
+    customWord = (text || '').trim().slice(0, 16);
+    if (!customWord) {
+      customWord = '';
+      render();
+      return;
+    }
+    render();
+  }
+
+  if (form && input) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      setWord(input.value);
+      input.blur();
+      if (customWord && window.PGToast) {
+        window.PGToast('粒子已重排：' + customWord);
+      }
+    });
+
+    input.addEventListener('input', function () {
+      clearTimeout(inputTimer);
+      inputTimer = setTimeout(function () {
+        setWord(input.value);
+      }, 260);
+    });
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        input.value = '';
+        setWord('');
+        input.blur();
+      }
+    });
+  }
+
+  /* ---------------- pointer ---------------- */
 
   canvas.addEventListener('pointermove', function (e) {
     var rect = canvas.getBoundingClientRect();
@@ -258,6 +332,10 @@
     explode: explode,
     next: function () {
       scheduleNext(0);
+    },
+    setWord: setWord,
+    count: function () {
+      return particles.length;
     }
   };
 

@@ -1,14 +1,18 @@
 /* =========================================================
    WEB PLAYGROUND — app.js
-   The small interactions: cursor, magnets, tilt, scramble,
-   reveals, palette switching, confetti and a Konami code.
+   Cursor, magnets, tilt, scramble, reveals, palette,
+   motion toggle, confetti and the Konami code.
+
+   Interaction effects are NOT disabled by prefers-reduced-motion.
+   Only ambient autoplay is calmed; see js/motion.js.
    ========================================================= */
 
 (function () {
   'use strict';
 
-  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var motion = window.PGMotion;
   var finePointer = window.matchMedia('(pointer: fine)').matches;
+  var calm = motion && motion.systemReduce;
 
   /* ---------------- palette switcher ---------------- */
 
@@ -56,9 +60,33 @@
     updatePaletteButtons();
   }
 
+  /* ---------------- motion toggle ---------------- */
+
+  var motionBtn = document.getElementById('motion-toggle');
+
+  function syncMotionButton() {
+    if (!motionBtn || !motion) return;
+    var on = motion.ambient;
+    motionBtn.classList.toggle('off', !on);
+    motionBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    motionBtn.setAttribute('aria-label', on ? '关闭背景动效' : '开启背景动效');
+    var label = motionBtn.querySelector('.mt-label');
+    if (label) label.textContent = on ? '动效 ON' : '动效 OFF';
+  }
+
+  if (motionBtn && motion) {
+    motionBtn.addEventListener('click', function () {
+      motion.toggle();
+      syncMotionButton();
+      toast(motion.ambient ? '背景动效已开启' : '背景动效已关闭（交互仍然可用）');
+    });
+    motion.onChange(syncMotionButton);
+    syncMotionButton();
+  }
+
   /* ---------------- custom cursor ---------------- */
 
-  if (finePointer && !reduceMotion) {
+  if (finePointer) {
     var dot = document.querySelector('.cursor-dot');
     var ring = document.querySelector('.cursor-ring');
 
@@ -69,6 +97,8 @@
       var my = window.innerHeight / 2;
       var rx = mx;
       var ry = my;
+      var ringScale = 1;
+      var ringScaleTarget = 1;
 
       dot.style.transform = 'translate(' + mx + 'px,' + my + 'px) translate(-50%,-50%)';
       ring.style.transform = 'translate(' + rx + 'px,' + ry + 'px) translate(-50%,-50%)';
@@ -82,21 +112,25 @@
       (function cursorLoop() {
         rx += (mx - rx) * 0.16;
         ry += (my - ry) * 0.16;
-        ring.style.transform = 'translate(' + rx.toFixed(2) + 'px,' + ry.toFixed(2) + 'px) translate(-50%,-50%)';
+        ringScale += (ringScaleTarget - ringScale) * 0.16;
+        ring.style.transform =
+          'translate(' + rx.toFixed(2) + 'px,' + ry.toFixed(2) + 'px)' +
+          ' translate(-50%,-50%) scale(' + ringScale.toFixed(3) + ')';
         requestAnimationFrame(cursorLoop);
       })();
 
-      Array.prototype.forEach.call(
-        document.querySelectorAll('a, button, [data-cursor]'),
-        function (el) {
-          el.addEventListener('pointerenter', function () {
-            ring.classList.add('is-hover');
-          });
-          el.addEventListener('pointerleave', function () {
-            ring.classList.remove('is-hover');
-          });
-        }
-      );
+      var hoverTargets = document.querySelectorAll('a, button, input, [data-cursor]');
+
+      Array.prototype.forEach.call(hoverTargets, function (el) {
+        el.addEventListener('pointerenter', function () {
+          ring.classList.add('is-hover');
+          ringScaleTarget = 1.7;
+        });
+        el.addEventListener('pointerleave', function () {
+          ring.classList.remove('is-hover');
+          ringScaleTarget = 1;
+        });
+      });
     }
   }
 
@@ -104,16 +138,16 @@
 
   var magnets = [];
 
-  if (!reduceMotion) {
-    Array.prototype.forEach.call(
-      document.querySelectorAll('[data-magnetic]'),
-      function (el) {
-        magnets.push({ el: el, x: 0, y: 0, tx: 0, ty: 0 });
-      }
-    );
-  }
+  Array.prototype.forEach.call(
+    document.querySelectorAll('[data-magnetic]'),
+    function (el) {
+      magnets.push({ el: el, x: 0, y: 0, tx: 0, ty: 0 });
+    }
+  );
 
   if (magnets.length) {
+    var magnetStrength = calm ? 0.14 : 0.22;
+
     window.addEventListener('pointermove', function (e) {
       for (var i = 0; i < magnets.length; i++) {
         var m = magnets[i];
@@ -125,8 +159,8 @@
         var reach = Math.max(rect.width, rect.height) * 0.5 + 70;
 
         if (Math.abs(dx) < reach && Math.abs(dy) < reach) {
-          m.tx = dx * 0.22;
-          m.ty = dy * 0.22;
+          m.tx = dx * magnetStrength;
+          m.ty = dy * magnetStrength;
         } else {
           m.tx = 0;
           m.ty = 0;
@@ -152,7 +186,7 @@
 
   /* ---------------- 3D tilt cards ---------------- */
 
-  if (finePointer && !reduceMotion) {
+  if (finePointer) {
     Array.prototype.forEach.call(
       document.querySelectorAll('[data-tilt]'),
       function (card) {
@@ -229,9 +263,11 @@
     requestAnimationFrame(frame);
   }
 
-  var scrambleEls = document.querySelectorAll('.scramble');
+  function scrambleAll() {
+    Array.prototype.forEach.call(document.querySelectorAll('.scramble'), scramble);
+  }
 
-  if ('IntersectionObserver' in window && !reduceMotion) {
+  if ('IntersectionObserver' in window) {
     var scrambleObserver = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
@@ -239,18 +275,20 @@
           scrambleObserver.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.35 });
+    }, { threshold: 0.3 });
 
-    Array.prototype.forEach.call(scrambleEls, function (el) {
+    Array.prototype.forEach.call(document.querySelectorAll('.scramble'), function (el) {
       scrambleObserver.observe(el);
     });
+  } else {
+    scrambleAll();
   }
 
   /* ---------------- reveal on scroll ---------------- */
 
   var revealEls = document.querySelectorAll('.reveal');
 
-  if ('IntersectionObserver' in window && !reduceMotion) {
+  if ('IntersectionObserver' in window) {
     var revealObserver = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
@@ -258,7 +296,7 @@
           revealObserver.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
 
     Array.prototype.forEach.call(revealEls, function (el) {
       revealObserver.observe(el);
@@ -309,8 +347,10 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () {
       toastEl.classList.remove('show');
-    }, duration || 3400);
+    }, duration || 3200);
   }
+
+  window.PGToast = toast;
 
   /* ---------------- confetti ---------------- */
 
@@ -389,6 +429,8 @@
 
     if (!confettiRAF) confettiRAF = requestAnimationFrame(confettiTick);
   }
+
+  window.PGConfetti = burst;
 
   if (confettiCanvas) {
     sizeConfetti();

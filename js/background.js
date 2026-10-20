@@ -120,17 +120,18 @@
     '',
     '  float f = fbm(p * 1.15 + 4.0 * r);',
     '',
-    '  vec3 col = vec3(0.010, 0.012, 0.024);',
-    '  col += mix(u_c1 * 0.06, u_c2 * 0.34, clamp(f * f * 1.6, 0.0, 1.0));',
-    '  col += u_c3 * 0.26 * clamp(length(r) * 0.60, 0.0, 1.0);',
-    '  col += u_c1 * 0.10 * smoothstep(0.65, 0.0, length(q));',
+    '  vec3 col = vec3(0.012, 0.015, 0.030);',
+    '  float ridge = clamp(pow(f, 2.6) * 2.2, 0.0, 1.0);',
+    '  col += mix(u_c1 * 0.05, u_c2 * 0.52, ridge);',
+    '  col += u_c3 * 0.26 * clamp(pow(length(r), 2.2) * 0.9, 0.0, 1.0);',
+    '  col += u_c1 * 0.10 * smoothstep(0.70, 0.0, length(q));',
     '',
     '  vec2 m = (u_mouse - 0.5 * u_res) / min(u_res.x, u_res.y);',
     '  float md = length(p - m);',
-    '  col += u_c1 * 0.24 * exp(-md * md * 5.0);',
+    '  col += u_c1 * 0.26 * exp(-md * md * 5.0);',
     '',
-    '  float vig = smoothstep(1.45, 0.12, length(p));',
-    '  col *= 0.24 + 0.76 * vig;',
+    '  float vig = smoothstep(1.55, 0.10, length(p));',
+    '  col *= 0.28 + 0.72 * vig;',
     '',
     '  float g = hash21(gl_FragCoord.xy + fract(u_time) * 137.0);',
     '  col += (g - 0.5) * 0.035;',
@@ -249,7 +250,6 @@
 
   function frame(now) {
     requestAnimationFrame(frame);
-    if (document.hidden) return;
 
     resize();
 
@@ -265,7 +265,8 @@
       state.mouseX * state.dpr,
       (window.innerHeight - state.mouseY) * state.dpr
     );
-    gl.uniform1f(uniforms.time, now * 0.001);
+    var scale = window.PGMotion ? window.PGMotion.scale : 1;
+    gl.uniform1f(uniforms.time, now * 0.001 * scale);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 

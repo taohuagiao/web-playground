@@ -21,10 +21,12 @@
   var mouse = { x: 0, y: 0, active: false };
   var accent = [0.18, 0.90, 1.00];
   var accent2 = [1.00, 0.24, 0.66];
-  var running = false;
-  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var motionScale = reduceMotion ? 0.15 : 1;
+  var running = true;
   var resizeTimer = 0;
+
+  function motionScale() {
+    return window.PGMotion ? window.PGMotion.scale : 1;
+  }
   var linkDistance = 132;
 
   function rgba(c, alpha) {
@@ -52,8 +54,8 @@
       nodes.push({
         x: Math.random() * W,
         y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.35 * motionScale,
-        vy: (Math.random() - 0.5) * 0.35 * motionScale,
+        vx: (Math.random() - 0.5) * 0.35 * motionScale(),
+        vy: (Math.random() - 0.5) * 0.35 * motionScale(),
         r: 1 + Math.random() * 1.6
       });
     }
@@ -70,15 +72,11 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     buildNodes();
+    render();
   }
 
-  function frame() {
-    requestAnimationFrame(frame);
-    if (!running) return;
-
-    ctx.clearRect(0, 0, W, H);
-
-    var i, j, n, m, dx, dy, dist;
+  function step() {
+    var i, n, dx, dy, dist;
 
     for (i = 0; i < nodes.length; i++) {
       n = nodes[i];
@@ -88,15 +86,15 @@
         dy = mouse.y - n.y;
         dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < 190 && dist > 0.001) {
-          var pull = (1 - dist / 190) * 0.035 * motionScale;
+          var pull = (1 - dist / 190) * 0.035 * motionScale();
           n.vx += (dx / dist) * pull;
           n.vy += (dy / dist) * pull;
         }
       }
 
       // Gentle random drift keeps the web alive.
-      n.vx += (Math.random() - 0.5) * 0.012 * motionScale;
-      n.vy += (Math.random() - 0.5) * 0.012 * motionScale;
+      n.vx += (Math.random() - 0.5) * 0.012 * motionScale();
+      n.vy += (Math.random() - 0.5) * 0.012 * motionScale();
 
       var speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
       var maxSpeed = 0.5;
@@ -113,6 +111,12 @@
       if (n.y < 0) { n.y = 0; n.vy *= -1; }
       if (n.y > H) { n.y = H; n.vy *= -1; }
     }
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+
+    var i, j, n, m, dx, dy;
 
     // Connections between nodes.
     ctx.lineWidth = 0.6;
@@ -186,16 +190,14 @@
     resizeTimer = setTimeout(resize, 200);
   }, { passive: true });
 
-  if ('IntersectionObserver' in window) {
-    var observer = new IntersectionObserver(function (entries) {
-      running = entries[0].isIntersecting;
-    }, { threshold: 0.05 });
-    observer.observe(wrap);
-  } else {
-    running = true;
+  function loop() {
+    requestAnimationFrame(loop);
+    if (!running) return;
+    step();
+    render();
   }
 
   updatePalette();
   resize();
-  requestAnimationFrame(frame);
+  requestAnimationFrame(loop);
 })();

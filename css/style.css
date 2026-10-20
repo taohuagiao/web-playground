@@ -305,6 +305,116 @@ body.cursor-ready canvas {
   transform: translateY(-1px);
 }
 
+/* ---------- motion toggle ---------- */
+
+.motion-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 6px 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .03);
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color .3s ease, color .3s ease;
+}
+
+.motion-toggle:hover {
+  border-color: color-mix(in srgb, var(--a1) 55%, transparent);
+  color: var(--fg);
+}
+
+.mt-track {
+  position: relative;
+  display: block;
+  width: 30px;
+  height: 16px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--a1) 70%, transparent);
+  transition: background .3s ease;
+}
+
+.mt-knob {
+  position: absolute;
+  top: 2px;
+  left: 16px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #05060a;
+  transition: left .3s cubic-bezier(.2, .8, .2, 1);
+}
+
+.motion-toggle.off .mt-track {
+  background: rgba(255, 255, 255, .16);
+}
+
+.motion-toggle.off .mt-knob {
+  left: 2px;
+  background: #eef2ff;
+}
+
+.mt-label {
+  font: 500 10px/1 var(--font-display);
+  letter-spacing: .14em;
+  white-space: nowrap;
+}
+
+/* ---------- hero input ---------- */
+
+.hero-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(460px, 100%);
+  margin-top: 28px;
+  padding: 6px 6px 6px 18px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .035);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transition: border-color .3s ease, box-shadow .3s ease;
+}
+
+.hero-form:focus-within {
+  border-color: color-mix(in srgb, var(--a1) 65%, transparent);
+  box-shadow: 0 0 36px -12px var(--a1);
+}
+
+.hero-form input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font: 500 14px/1.4 var(--font-display);
+  letter-spacing: .02em;
+  outline: none;
+}
+
+.hero-form input::placeholder {
+  color: rgba(238, 242, 255, .34);
+}
+
+.hero-form button {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(115deg, var(--a1), var(--a2));
+  color: #05060a;
+  font: 700 12px/1 var(--font-display);
+  letter-spacing: .04em;
+  cursor: pointer;
+  transition: filter .3s ease, transform .3s ease;
+}
+
+.hero-form button:hover {
+  filter: brightness(1.08);
+}
+
 /* ---------- hero ---------- */
 
 .hero {
@@ -728,6 +838,79 @@ body.cursor-ready canvas {
   animation: pulse 1.8s ease-in-out infinite;
 }
 
+/* ---------- stage canvases ---------- */
+
+.globe-wrap,
+.ripple-wrap {
+  position: relative;
+  margin-top: 48px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 34px;
+  background:
+    radial-gradient(120% 120% at 50% 0%, rgba(255, 255, 255, .05), transparent 60%),
+    rgba(8, 10, 18, .55);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.globe-wrap {
+  height: min(68vh, 620px);
+}
+
+.ripple-wrap {
+  height: min(54vh, 440px);
+}
+
+.globe-wrap canvas,
+.ripple-wrap canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.globe-wrap canvas {
+  cursor: grab;
+}
+
+.globe-wrap canvas:active {
+  cursor: grabbing;
+}
+
+.ripple-wrap canvas {
+  cursor: crosshair;
+}
+
+.stage-tag {
+  position: absolute;
+  left: 26px;
+  bottom: 22px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(5, 6, 10, .55);
+  color: var(--muted);
+  font: 500 10px/1 var(--font-display);
+  letter-spacing: .22em;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.stage-tag::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--a1);
+  box-shadow: 0 0 10px 2px var(--a1);
+}
+
 /* ---------- footer ---------- */
 
 .footer {
@@ -846,10 +1029,17 @@ body.party .nav {
 
 /* ---------- responsive ---------- */
 
-@media (max-width: 900px) {
+@media (max-width: 1120px) {
   .nav-links {
     display: none;
   }
+
+  .motion-toggle .mt-label {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
 
   .cards {
     grid-template-columns: 1fr;
@@ -910,6 +1100,28 @@ body.party .nav {
     flex: 1;
   }
 
+  .hero-form {
+    margin-top: 22px;
+    padding-left: 16px;
+  }
+
+  .hero-form input {
+    font-size: 13px;
+  }
+
+  .hero-form button {
+    padding: 10px 14px;
+    font-size: 11px;
+  }
+
+  .globe-wrap {
+    height: 380px;
+  }
+
+  .ripple-wrap {
+    height: 300px;
+  }
+
   .scroll-hint {
     display: none;
   }
@@ -926,35 +1138,29 @@ body.party .nav {
   }
 }
 
-/* ---------- reduced motion ---------- */
+/* ---------- reduced motion ----------
+   Only ambient/autoplay motion is calmed. Pointer-driven
+   interactions stay available, because they are direct
+   responses to the user rather than unrequested motion. */
 
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
 
-  *,
-  *::before,
-  *::after {
-    animation-duration: .001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .001ms !important;
+  .live-dot,
+  .scroll-hint i,
+  .network-hint::before {
+    animation: none;
   }
+}
 
-  .reveal {
-    opacity: 1;
-    transform: none;
-  }
+body.ambient-off .live-dot,
+body.ambient-off .scroll-hint i,
+body.ambient-off .network-hint::before {
+  animation: none;
+}
 
-  .cursor-dot,
-  .cursor-ring {
-    display: none;
-  }
-
-  body.cursor-ready,
-  body.cursor-ready a,
-  body.cursor-ready button,
-  body.cursor-ready canvas {
-    cursor: auto;
-  }
+body.ambient-off .grain {
+  opacity: .03;
 }
