@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WEB PLAYGROUND — 浏览器炫技实验室</title>
+  <meta name="description" content="用原生 HTML / CSS / JavaScript 手搓的浏览器交互实验室：WebGL 极光着色器、粒子文字、磁力卡片、文字解码、活体网络。">
+  <meta name="theme-color" content="#05060a">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <canvas id="bg" aria-hidden="true"></canvas>
+
+  <div class="cursor-dot" aria-hidden="true"></div>
+  <div class="cursor-ring" aria-hidden="true"></div>
+  <div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
+
+  <header class="nav" id="nav">
+    <a class="brand" href="#top" data-magnetic>◈ PLAYGROUND</a>
+    <nav class="nav-links" aria-label="主导航">
+      <a href="#cards" data-magnetic>磁力卡片</a>
+      <a href="#decode" data-magnetic>文字解码</a>
+      <a href="#network" data-magnetic>活体网络</a>
+    </nav>
+    <div class="nav-right">
+      <div class="palette-switcher" id="palette-switcher" role="group" aria-label="切换配色"></div>
+      <a class="github-link" href="https://github.com" target="_blank" rel="noopener" aria-label="GitHub" data-magnetic>
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path fill="currentColor" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2.17c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.67.41.35.77 1.05.77 2.12v3.14c0 .31.21.67.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/>
+        </svg>
+      </a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero" id="hero">
+      <p class="hero-kicker reveal"><span class="live-dot"></span>LIVE EXPERIMENT · 浏览器游乐场</p>
+
+      <div class="hero-art" id="hero-art">
+        <canvas id="particle-canvas" aria-hidden="true"></canvas>
+      </div>
+
+      <div class="hero-copy">
+        <h1 class="sr-only">WEB PLAYGROUND — 浏览器炫技实验室</h1>
+        <p class="hero-sub reveal" style="--d:.08s">原生 JavaScript 手搓的交互实验室：WebGL 极光、粒子文字、磁力卡片、活体网络。<br>移动鼠标，点击画面，看看浏览器能有多不老实。</p>
+        <div class="hero-actions reveal" style="--d:.16s">
+          <a class="btn btn-primary" href="#cards" data-magnetic>进入实验室 <span aria-hidden="true">→</span></a>
+          <button class="btn" type="button" data-action="explode" data-magnetic>炸一下试试 <span aria-hidden="true">✦</span></button>
+        </div>
+      </div>
+
+      <a class="scroll-hint reveal" href="#cards" style="--d:.3s" aria-label="向下滚动">
+        <span>SCROLL TO PLAY</span>
+        <i aria-hidden="true"></i>
+      </a>
+    </section>
+
+    <section class="section" id="cards">
+      <div class="section-head">
+        <span class="eyebrow reveal">01 / MAGNETIC CARDS</span>
+        <h2 class="scramble reveal" data-text="会呼吸的卡片" style="--d:.06s">会呼吸的卡片</h2>
+        <p class="section-desc reveal" style="--d:.12s">把鼠标移到卡片上——它会朝你倾斜，光斑跟着你的视线走。没有插件，只有 CSS 3D 和一点点三角函数。</p>
+      </div>
+
+      <div class="cards">
+        <article class="card tilt reveal" data-tilt style="--d:.05s">
+          <div class="card-top">
+            <span class="card-tag">GLSL</span>
+            <span class="card-dot" aria-hidden="true"></span>
+          </div>
+          <div class="card-body">
+            <h3>极光着色器</h3>
+            <p>一整片流动的极光，由片元着色器逐像素实时计算。没有图片，没有视频，只有数学。</p>
+          </div>
+          <span class="card-index" aria-hidden="true">01</span>
+        </article>
+
+        <article class="card tilt reveal" data-tilt style="--d:.12s">
+          <div class="card-top">
+            <span class="card-tag">CANVAS 2D</span>
+            <span class="card-dot" aria-hidden="true"></span>
+          </div>
+          <div class="card-body">
+            <h3>粒子文字</h3>
+            <p>文字被拆成数千颗发光粒子。它们会躲开你的鼠标，也会在你点击时集体炸开。</p>
+          </div>
+          <span class="card-index" aria-hidden="true">02</span>
+        </article>
+
+        <article class="card tilt reveal" data-tilt style="--d:.19s">
+          <div class="card-top">
+            <span class="card-tag">PHYSICS</span>
+            <span class="card-dot" aria-hidden="true"></span>
+          </div>
+          <div class="card-body">
+            <h3>磁力交互</h3>
+            <p>按钮、导航、卡片都带上了质量。指针靠近时，它们会被轻轻吸过去，然后自己弹回来。</p>
+          </div>
+          <span class="card-index" aria-hidden="true">03</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="section decode-section" id="decode">
+      <div class="section-head">
+        <span class="eyebrow reveal">02 / TEXT DECODE</span>
+        <h2 class="scramble reveal" data-text="文字解码" style="--d:.06s">文字解码</h2>
+      </div>
+      <p class="decode-text scramble reveal" style="--d:.1s" data-text="浏览器里最迷人的东西，从来不是静态的排版，而是那些会回应你的细节——一次呼吸、一点延迟、一个刚好接住鼠标的瞬间。">浏览器里最迷人的东西，从来不是静态的排版，而是那些会回应你的细节——一次呼吸、一点延迟、一个刚好接住鼠标的瞬间。</p>
+      <p class="decode-caption reveal" style="--d:.18s">↑ 滚动到这里，文字会从乱码中逐字显形</p>
+    </section>
+
+    <section class="section" id="network">
+      <div class="network-wrap reveal">
+        <canvas id="network-canvas" aria-hidden="true"></canvas>
+        <div class="network-copy">
+          <span class="eyebrow">03 / LIVING NETWORK</span>
+          <h2 class="scramble" data-text="活体网络">活体网络</h2>
+          <p>一百个节点，一千条连线。它们本来只是随机漂浮，直到你的鼠标靠近——整张网会为你让路。</p>
+          <span class="network-hint">MOVE YOUR CURSOR INSIDE</span>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>用原生 HTML / CSS / JavaScript 手搓 · 没有框架，没有依赖</p>
+      <p class="easter">彩蛋：<kbd>↑</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><kbd>←</kbd><kbd>→</kbd><kbd>B</kbd><kbd>A</kbd></p>
+      <p class="copyright">© 2026 WEB PLAYGROUND</p>
+    </footer>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+
+  <noscript>
+    <div class="noscript">这个实验室需要 JavaScript 才能启动。请开启后再来玩。</div>
+  </noscript>
+
+  <script src="js/background.js" defer></script>
+  <script src="js/particles.js" defer></script>
+  <script src="js/network.js" defer></script>
+  <script src="js/app.js" defer></script>
+</body>
+</html>
