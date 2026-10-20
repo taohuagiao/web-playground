@@ -278,9 +278,13 @@
     lastY = e.clientY;
     yawVel = 0;
     pitchVel = 0;
-    try {
-      canvas.setPointerCapture(e.pointerId);
-    } catch (err) { /* synthetic or already captured */ }
+    // Synthetic events and some touch stacks have no active pointer to
+    // capture; capture is a convenience, never a requirement.
+    if (canvas.setPointerCapture && e.pointerId != null) {
+      try {
+        canvas.setPointerCapture(e.pointerId);
+      } catch (err) { /* no active pointer */ }
+    }
   }
 
   function pointerMove(e) {
@@ -307,9 +311,11 @@
 
   function pointerUp(e) {
     dragging = false;
-    try {
-      canvas.releasePointerCapture(e.pointerId);
-    } catch (err) { /* not captured */ }
+    if (canvas.releasePointerCapture && e && e.pointerId != null) {
+      try {
+        canvas.releasePointerCapture(e.pointerId);
+      } catch (err) { /* not captured */ }
+    }
   }
 
   canvas.addEventListener('pointerdown', pointerDown);
